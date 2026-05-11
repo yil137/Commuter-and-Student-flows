@@ -263,25 +263,52 @@ def prepare_flow_data():
     # Save cleaned outputs
     # =========================
 
-    flows_gdf.to_file(
-        OUTPUT_DIR / "flows_detailed.gpkg",
-        layer="flows_detailed",
-        driver="GPKG"
+    flows_summary_small = flows_summary_gdf[
+        [
+            "origin_name",
+            "destination_name",
+            "Student",
+            "Commuter",
+            "Total",
+            "geometry"
+        ]
+    ].copy()
+
+    sa2_akl_small = sa2_akl[
+        [
+            "SA22023_V1_00_NAME",
+            "geometry"
+        ]
+    ].copy()
+
+    sa2_akl_small["geometry"] = (
+        sa2_akl_small.geometry.simplify(
+            tolerance=0.0005,
+            preserve_topology=True
+        )
     )
 
-    flows_summary_gdf.to_file(
-        OUTPUT_DIR / "flows_summary.gpkg",
-        layer="flows_summary",
-        driver="GPKG"
+    transport_summary = flows_gdf.drop(
+        columns=["geometry", "origin_point", "destination_point"],
+        errors="ignore"
     )
 
-    sa2_akl.to_file(
-        OUTPUT_DIR / "sa2_akl.gpkg",
-        layer="sa2_akl",
-        driver="GPKG"
+    transport_summary.to_csv(
+        OUTPUT_DIR / "transport_summary.csv",
+        index=False
     )
 
-    print("Cleaned files saved to data/cleaned/")
+    flows_summary_small.to_file(
+        OUTPUT_DIR / "flows_summary.geojson",
+        driver="GeoJSON"
+    )
+
+    sa2_akl_small.to_file(
+        OUTPUT_DIR / "sa2_akl.geojson",
+        driver="GeoJSON"
+    )
+
+    print("Cleaned deployment files saved to data/cleaned/")
 
 
 # =========================

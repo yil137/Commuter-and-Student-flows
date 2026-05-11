@@ -5,6 +5,7 @@ from ipywidgets import HTML
 from pathlib import Path
 import json
 
+import pandas as pd
 import matplotlib.pyplot as plt
 import geopandas as gpd
 
@@ -13,21 +14,20 @@ import geopandas as gpd
 # Load cleaned data
 # =========================
 
-DATA_DIR = Path("data/cleaned")
+APP_DIR = Path(__file__).parent
 
-flows_gdf = gpd.read_file(
-    DATA_DIR / "flows_detailed.gpkg",
-    layer="flows_detailed"
+DATA_DIR = APP_DIR / "data" / "cleaned"
+
+flows_gdf = pd.read_csv(
+    DATA_DIR / "transport_summary.csv"
 )
 
 flows_summary_gdf = gpd.read_file(
-    DATA_DIR / "flows_summary.gpkg",
-    layer="flows_summary"
+    DATA_DIR / "flows_summary.geojson"
 )
 
 sa2_akl = gpd.read_file(
-    DATA_DIR / "sa2_akl.gpkg",
-    layer="sa2_akl"
+    DATA_DIR / "sa2_akl.geojson"
 )
 
 
