@@ -1,0 +1,113 @@
+---
+title: "GISCI 343 Assignment 2: Design Report"
+author: "Monica Li (yil137)"
+date: today
+format:
+  pdf:
+    documentclass: article
+    geometry: margin=2.5cm
+    fontsize: 11pt
+    number-sections: true
+    toc: false
+---
+
+# Motivation and Audience
+
+## What problem does your dashboard address?
+
+This dashboard explores commuter and student movement patterns across Auckland using 2023 Census origin-destination data. The dashboard focuses on how commuter and student flows differ when an Auckland SA2 area is selected as either an origin or a destination. While workers and students both travel daily across the city, their travel patterns are not always the same. Some areas may mainly send out commuters, while others may attract large numbers of students.
+
+The dashboard helps users investigate how movement patterns differ across Auckland and whether certain areas function more as residential origins, employment destinations, or education destinations. The dashboard also compares the main transport modes used by commuters and students, helping users understand how movement behaviour changes between groups.
+
+## Who is it for?
+
+The dashboard is designed for people interested in Auckland transport and urban planning, including students, researchers, and local planners. A user can select an Auckland SA2 area, choose whether to display inflow or outflow, and compare commuter and student movement patterns. The dashboard supports exploration of how different areas are connected through work and study travel.
+
+The dashboard may also help users think about transport accessibility and infrastructure demand. Areas with strong commuter inflow may experience pressure on roads and public transport during working hours, while areas with strong student inflow may reflect educational concentration and accessibility.
+
+## What insight does it enable?
+
+The dashboard enables users to quickly compare how commuter and student movement patterns differ across Auckland and identify which areas act as important origins or destinations for daily travel.
+
+# Data and Preparation
+
+## Datasets used
+
+| Dataset | Format | Rows | Key variables |
+|---------|--------|------|---------------|
+| 2023 commuter flows | CSV | 65,056 | origin area, workplace area, transport totals |
+| 2023 student flows | CSV | 29,289 | origin area, education area, transport totals |
+| SA2 2023 Generalised | GeoPackage | 2,395 | SA2 name, geometry |
+| Regional Council 2023 Generalised | GeoPackage | 17 | regional name, geometry |
+
+Data sources:
+
+- 2023 Census commuter dataset: https://datafinder.stats.govt.nz/table/121988-2023-census-main-means-of-travel-to-work-by-statistical-area-2/
+- 2023 Census student dataset: https://datafinder.stats.govt.nz/table/121971-2023-census-main-means-of-travel-to-education-by-statistical-area-2/
+- Statistical Area 2 2023 Generalised: https://datafinder.stats.govt.nz/layer/111227-statistical-area-2-2023-generalised/
+- Regional Council 2023 Generalised: https://datafinder.stats.govt.nz/layer/111182-regional-council-2023-generalised/
+
+## Cleaning and preparation steps
+
+1. Replace missing values such as `-999` with null values
+2. Rename long Stats NZ column names into simpler names such as `origin_name` and `destination_name`
+3. Standardise transport mode columns across commuter and student datasets
+4. Remove unnecessary ASCII name columns
+5. Convert transport columns into numeric values
+6. Combine commuter and student datasets into one dataset
+7. Filter SA2 boundaries to the Auckland Region only
+8. Reproject spatial data into EPSG:4326 for ipyleaflet
+9. Create SA2 centroids for origin and destination locations
+10. Generate centroid-to-centroid flow lines between origins and destinations
+11. Aggregate duplicate origin-destination pairs into single flow lines
+12. Calculate combined totals for commuter and student flows
+
+## Limitations
+
+- Flow lines connect SA2 centroids rather than real travel routes, so the lines show general spatial relationships instead of exact paths travelled
+- The dashboard only uses 2023 Census data and does not currently compare changes between 2018 and 2023
+- Some small Census values may be rounded or suppressed, which can affect smaller flow totals
+- The dashboard focuses only on Auckland SA2 areas, so flows connecting Auckland with other regions are excluded
+
+# Technical Architecture
+
+The dashboard is built using Shiny for Python with ipyleaflet for mapping and matplotlib for chart visualisation. Data loading and preparation occur at the start of the application so the app does not repeatedly reload files during interaction. Several helper functions are used to organise the code, including functions for cleaning data, filtering movement direction, generating popup text, assigning colours, and creating summary text.
+
+The application layout uses `ui.page_sidebar()` with a sidebar on the left and outputs on the right. The sidebar contains a dropdown for selecting an Auckland SA2 area, a dropdown for selecting movement direction, checkboxes for commuter and student flows, and an Apply filters button. The main panel contains explanatory text, a dynamic summary sentence, an interactive ipyleaflet map, and a grouped bar chart.
+
+The app uses reactive programming through `@reactive.calc`. Shared reactive calculations are used so filtering only occurs once before feeding multiple outputs. The `filtered_flow_lines()` reactive calculation prepares the flow data used by both the summary text and the interactive map. The `filtered_transport_data()` reactive calculation prepares the data used in the transport mode chart.
+
+An Apply filters button is controlled through `@reactive.event`, meaning outputs only update when the user clicks the button. This avoids recalculating outputs during every small interaction and creates a more controlled user experience.
+
+The interactive map is rendered using `@render_widget` with ipyleaflet. The selected SA2 region is highlighted in purple, while flow lines are coloured according to total flow size. Popup windows display commuter, student, and total values when the user clicks on flow lines or the selected area. The transport chart is rendered using `@render.plot` and compares the top three transport modes for commuter and student flows.
+
+```{mermaid}
+%%| fig-width: 5
+flowchart TD
+
+    A[User inputs] --> B[Apply filters button]
+    B --> C[applied_filters]
+    C --> D[filtered_flow_lines]
+    C --> E[filtered_transport_data]
+    D --> F[Summary text]
+    D --> G[Interactive map]
+    E --> H[Transport chart]
+```
+
+# User Interface Walkthrough
+
+When the dashboard opens, the user sees a sidebar containing the input controls and a main panel containing the outputs. The sidebar allows the user to select an Auckland SA2 area, choose whether to display inflow or outflow, and select commuter flows, student flows, or both. The user then clicks the Apply filters button to update the dashboard.
+
+The main panel begins with a short explanation of the dashboard purpose, followed by a dynamic summary sentence. The summary sentence reports the selected area, movement direction, and the total number of commuters, students, and combined people included in the current view.
+
+The interactive map displays the selected SA2 area and the corresponding origin-destination flow lines. The selected SA2 is highlighted in purple, while the flow lines are coloured and weighted according to total flow size. Origin mode displays outflow from the selected area, while destination mode displays inflow into the selected area. Clicking on the selected region or a flow line opens a popup containing commuter, student, and total flow values.
+
+Below the map, the grouped bar chart compares the top three transport modes used by commuters and students. The chart allows users to compare differences between the two groups, such as stronger reliance on private vehicles or public transport.
+
+# Limitations and Future Improvements
+
+One limitation of the dashboard is that the flow lines are centroid-to-centroid connections rather than actual travel routes. While this approach effectively shows broad movement patterns, it simplifies the real complexity of travel behaviour and transport networks. The dashboard also focuses only on 2023 Census data, meaning changes between Census years cannot currently be explored.
+
+Another limitation is that the dashboard only includes Auckland SA2 areas. This improves readability and reduces clutter, but it excludes connections between Auckland and the rest of New Zealand. Some small flows may also be influenced by Census rounding or suppression.
+
+With more time, the dashboard could be expanded by adding a year comparison between 2018 and 2023, including net inflow and outflow calculations, and introducing additional transport accessibility indicators. Future versions could also include interactive filtering by transport mode or larger regional groupings such as local board areas.
