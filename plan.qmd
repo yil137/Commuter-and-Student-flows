@@ -100,7 +100,9 @@ When the dashboard opens, the user sees a sidebar containing the input controls 
 
 The main panel begins with a short explanation of the dashboard purpose, followed by a dynamic summary sentence. The summary sentence reports the selected area, movement direction, and the total number of commuters, students, and combined people included in the current view.
 
-The interactive map displays the selected SA2 area and the corresponding origin-destination flow lines. The selected SA2 is highlighted in purple, while the flow lines are coloured and weighted according to total flow size. Origin mode displays outflow from the selected area, while destination mode displays inflow into the selected area. Clicking on the selected region or a flow line opens a popup containing commuter, student, and total flow values.
+The interactive map displays the selected SA2 area and the corresponding origin-destination flow lines. The selected SA2 polygon changes colour according to internal flow intensity, representing people who both live and work/study within the same area. Lighter colours represent lower internal flow values, while darker colours represent higher internal flow values.
+
+Flow lines are coloured and weighted according to total movement size. Origin mode displays outflow from the selected area, while destination mode displays inflow into the selected area. Clicking on the selected region or a flow line opens a popup containing commuter, student, total flow, and internal flow information.
 
 Below the map, the grouped bar chart compares the top three transport modes used by commuters and students. The chart allows users to compare differences between the two groups, such as stronger reliance on private vehicles or public transport.
 
