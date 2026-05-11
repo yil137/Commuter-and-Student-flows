@@ -156,11 +156,30 @@ def make_summary_sentence(df, selected_area, direction):
 
 def show_popup(m, feature, coordinates, property_name="popup_text"):
 
-    if feature is None or coordinates is None:
+    if feature is None:
         return
 
+    if property_name not in feature["properties"]:
+        return
+
+    if coordinates is not None and len(coordinates) == 2:
+
+        lon_or_lat = coordinates[0]
+        lat_or_lon = coordinates[1]
+
+        # GeoJSON sometimes gives [lon, lat], but Popup needs [lat, lon]
+        if abs(lon_or_lat) > 90:
+            popup_location = [lat_or_lon, lon_or_lat]
+
+        else:
+            popup_location = [lon_or_lat, lat_or_lon]
+
+    else:
+
+        popup_location = m.center
+
     popup = Popup(
-        location=coordinates,
+        location=popup_location,
         child=HTML(
             value=feature["properties"][property_name]
         ),
@@ -168,7 +187,7 @@ def show_popup(m, feature, coordinates, property_name="popup_text"):
         auto_close=True
     )
 
-    m.add(popup)
+    m.add_layer(popup)
 
 
 # =========================
